@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js'
 import { clamp } from './utils/math.utils'
 import { RNG } from './utils/rng.utils'
+import { blocks } from './block'
 
 export class World extends THREE.Group {
   /**
@@ -45,7 +46,7 @@ export class World extends THREE.Group {
         const row = []
         for (let z = 0; z < width; z += 1) {
           row.push({
-            id: 0,
+            id: blocks.empty.id,
             instancedId: null
           })
         }
@@ -65,10 +66,7 @@ export class World extends THREE.Group {
 
     for (let x = 0; x < width; x++) {
       for (let z = 0; z < width; z++) {
-        const val = simplex.noise(
-          x / scale,
-          z / scale
-        )
+        const val = simplex.noise(x / scale, z / scale)
 
         const scaledNoise = offset + magnitude * val
 
@@ -77,7 +75,22 @@ export class World extends THREE.Group {
         _height = clamp(_height, 0, height - 1)
 
         for (let y = 0; y <= _height; y++) {
-          this.setBlockId({ x, y, z }, 1)
+          if (y < _height) {
+            this.setBlockId(
+              { x, y, z },
+              blocks.dirt.id
+            )
+          } else if (y === _height) {
+            this.setBlockId(
+              { x, y, z },
+              blocks.grass.id
+            )
+          } else {
+            this.setBlockId(
+              { x, y, z },
+              blocks.empty.id
+            )
+          }
         }
       }
     }
@@ -89,8 +102,12 @@ export class World extends THREE.Group {
     const { width, height } = this.size
     const maxBlockCount = width * width * height
     const blockGeometry = new THREE.BoxGeometry(1, 1, 1)
-    const blockMaterial = new THREE.MeshLambertMaterial({ color: '#127324' })
-    const mesh = new THREE.InstancedMesh(blockGeometry, blockMaterial, maxBlockCount)
+    const blockMaterial = new THREE.MeshLambertMaterial()
+    const mesh = new THREE.InstancedMesh(
+      blockGeometry,
+      blockMaterial,
+      maxBlockCount
+    )
     mesh.count = 0
 
     const matrix = new THREE.Matrix4()
@@ -98,11 +115,15 @@ export class World extends THREE.Group {
       for (let y = 0; y < height; y += 1) {
         for (let z = 0; z < width; z += 1) {
           const blockId = this.getBlockAt(x, y, z).id
+          const blockType = Object.values(blocks).find(
+            (block) => block.id === blockId
+          )
           const instancedId = mesh.count
 
-          if (blockId !== 0) {
+          if (blockId !== blocks.empty.id && !this.isBlockObscured({ x, y, z })) {
             matrix.setPosition(x + 0.5, y + 0.5, z + 0.5)
             mesh.setMatrixAt(instancedId, matrix)
+            mesh.setColorAt(instancedId, new THREE.Color(blockType.color))
             this.setBlockInstancedId({ x, y, z }, instancedId)
             mesh.count += 1
           }
@@ -149,6 +170,28 @@ export class World extends THREE.Group {
       return true
     } else {
       return false
+    }
+  }
+
+  isBlockObscured ({ x, y, z }) {
+    const up = this.getBlockAt(x, y + 1, z)?.id ?? blocks.empty.id
+    const down = this.getBlockAt(x, y - 1, z)?.id ?? blocks.empty.id
+    const left = this.getBlockAt(x - 1, y, z)?.id ?? blocks.empty.id
+    const right = this.getBlockAt(x + 1, y, z)?.id ?? blocks.empty.id
+    const front = this.getBlockAt(x, y, z + 1)?.id ?? blocks.empty.id
+    const back = this.getBlockAt(x, y, z - 1)?.id ?? blocks.empty.id
+
+    if (
+      up === blocks.empty.id ||
+      down === blocks.empty.id ||
+      left === blocks.empty.id ||
+      right === blocks.empty.id ||
+      front === blocks.empty.id ||
+      back === blocks.empty.id
+    ) {
+      return false
+    } else {
+      return true
     }
   }
 
