@@ -2,7 +2,9 @@ import * as THREE from 'three'
 import { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js'
 import { clamp } from './utils/math.utils'
 import { RNG } from './utils/rng.utils'
-import { blocks } from './block'
+import { blocks, resourcesBlocks } from './block'
+
+const blockGeometry = new THREE.BoxGeometry()
 
 export class World extends THREE.Group {
   /**
@@ -28,8 +30,10 @@ export class World extends THREE.Group {
   }
 
   generate () {
+    const rng = new RNG(this.params.seed)
     this.#initTerrain()
-    this.#generateTerrain()
+    this.#generateResources(rng)
+    this.#generateTerrain(rng)
     this.#generateMeshes()
   }
 
@@ -57,10 +61,30 @@ export class World extends THREE.Group {
   }
 
   /**
+   * Function to genertate coal, stone, etc... for the world
+   */
+  #generateResources (rng) {
+    const simplex = new SimplexNoise(rng)
+    const { width, height } = this.size
+    resourcesBlocks.forEach((block) => {
+      for (let x = 0; x < width; x += 1) {
+        for (let y = 0; y < height; y += 1) {
+          for (let z = 0; z < width; z += 1) {
+            const val = simplex.noise3d(x / block.scale.x, y / block.scale.y, z / block.scale.z)
+            if (val > block.scarcity) {
+              this.setBlockId({ x, y, z }, block.id)
+            }
+          }
+        }
+      }
+    })
+  }
+
+  /**
    * Generate world terrain
    */
-  #generateTerrain () {
-    const simplex = new SimplexNoise(new RNG(this.params.seed))
+  #generateTerrain (rng) {
+    const simplex = new SimplexNoise(rng)
     const { width, height } = this.size
     const { scale, offset, magnitude } = this.params.terrain
 
@@ -74,8 +98,8 @@ export class World extends THREE.Group {
 
         _height = clamp(_height, 0, height - 1)
 
-        for (let y = 0; y <= _height; y++) {
-          if (y < _height) {
+        for (let y = 0; y <= height; y++) {
+          if (y < _height && this.getBlockAt(x, y, z).id === blocks.empty.id) {
             this.setBlockId(
               { x, y, z },
               blocks.dirt.id
@@ -85,7 +109,7 @@ export class World extends THREE.Group {
               { x, y, z },
               blocks.grass.id
             )
-          } else {
+          } else if (y > _height) {
             this.setBlockId(
               { x, y, z },
               blocks.empty.id
@@ -101,29 +125,37 @@ export class World extends THREE.Group {
 
     const { width, height } = this.size
     const maxBlockCount = width * width * height
-    const blockGeometry = new THREE.BoxGeometry(1, 1, 1)
-    const blockMaterial = new THREE.MeshLambertMaterial()
-    const mesh = new THREE.InstancedMesh(
-      blockGeometry,
-      blockMaterial,
-      maxBlockCount
-    )
-    mesh.count = 0
+    const meshes = {}
+
+    Object.values(blocks)
+      .filter(b => b.id !== blocks.empty.id)
+      .forEach((blockType) => {
+        const mesh = new THREE.InstancedMesh(
+          blockGeometry,
+          blockType.material,
+          maxBlockCount
+        )
+        mesh.name = blockType.name
+        mesh.count = 0
+        mesh.castShadow = true
+        mesh.receiveShadow = true
+        meshes[blockType.id] = mesh
+      })
 
     const matrix = new THREE.Matrix4()
     for (let x = 0; x < width; x += 1) {
       for (let y = 0; y < height; y += 1) {
         for (let z = 0; z < width; z += 1) {
           const blockId = this.getBlockAt(x, y, z).id
-          const blockType = Object.values(blocks).find(
-            (block) => block.id === blockId
-          )
+          if (blockId === blocks.empty.id) continue
+
+          const mesh = meshes[blockId]
+
           const instancedId = mesh.count
 
-          if (blockId !== blocks.empty.id && !this.isBlockObscured({ x, y, z })) {
+          if (!this.isBlockObscured({ x, y, z })) {
             matrix.setPosition(x + 0.5, y + 0.5, z + 0.5)
             mesh.setMatrixAt(instancedId, matrix)
-            mesh.setColorAt(instancedId, new THREE.Color(blockType.color))
             this.setBlockInstancedId({ x, y, z }, instancedId)
             mesh.count += 1
           }
@@ -131,7 +163,7 @@ export class World extends THREE.Group {
       }
     }
 
-    this.add(mesh)
+    this.add(...Object.values(meshes))
   }
 
   // #region Helper Functions

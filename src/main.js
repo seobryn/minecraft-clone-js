@@ -14,6 +14,8 @@ const renderer = new THREE.WebGLRenderer()
 renderer.setSize(innerWidth, innerHeight)
 renderer.setPixelRatio(devicePixelRatio)
 renderer.setClearColor(0x80a0e0)
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 document.body.appendChild(renderer.domElement)
 document.body.appendChild(stats.dom)
@@ -34,14 +36,22 @@ world.generate()
 scene.add(world)
 
 function setupLights () {
-  const light1 = new THREE.DirectionalLight()
-  light1.position.set(1, 1, 1)
-  scene.add(light1)
+  const sun = new THREE.DirectionalLight()
+  sun.position.set(64, 64, 128)
+  sun.castShadow = true
+  sun.shadow.camera.left = -128
+  sun.shadow.camera.right = 128
+  sun.shadow.camera.top = 128
+  sun.shadow.camera.bottom = -128
+  sun.shadow.camera.near = 0.1
+  sun.shadow.camera.far = 200
+  sun.shadow.bias = -0.0001
+  sun.shadow.mapSize = new THREE.Vector2(512, 512)
 
-  const light2 = new THREE.DirectionalLight()
-  light2.position.set(-1, 1, -0.5)
-  scene.add(light2)
+  scene.add(sun)
 
+  const shadowHelper = new THREE.CameraHelper(sun.shadow.camera)
+  scene.add(shadowHelper)
   const ambient = new THREE.AmbientLight()
   ambient.intensity = 0.1
   scene.add(ambient)

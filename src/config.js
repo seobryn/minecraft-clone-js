@@ -1,6 +1,6 @@
 export const config = {
   mapSize: {
-    width: 64,
-    height: 32
+    width: 128,
+    height: 20
   }
 }
