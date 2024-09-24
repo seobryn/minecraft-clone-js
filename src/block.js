@@ -11,12 +11,12 @@ function loadTexture (path) {
 }
 
 const textures = {
-  dirt: loadTexture('/textures/dirt.png'),
-  grass: loadTexture('/textures/grass.png'),
-  grassSide: loadTexture('/textures/grass_side.png'),
-  stone: loadTexture('/textures/stone.png'),
-  coalOre: loadTexture('/textures/coal_ore.png'),
-  ironOre: loadTexture('/textures/iron_ore.png')
+  dirt: loadTexture('/minecraft-clone-js/textures/dirt.png'),
+  grass: loadTexture('/minecraft-clone-js/textures/grass.png'),
+  grassSide: loadTexture('/minecraft-clone-js/textures/grass_side.png'),
+  stone: loadTexture('/minecraft-clone-js/textures/stone.png'),
+  coalOre: loadTexture('/minecraft-clone-js/textures/coal_ore.png'),
+  ironOre: loadTexture('/minecraft-clone-js/textures/iron_ore.png')
 }
 
 export const blocks = {
