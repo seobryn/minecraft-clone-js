@@ -34,6 +34,7 @@ controls.update()
 
 // Scene setup
 const scene = new THREE.Scene()
+scene.fog = new THREE.Fog(0x80a0e0, 50, 80)
 
 const world = new World(config.mapSize)
 world.generate()

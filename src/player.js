@@ -139,14 +139,10 @@ export class Player {
   onKeyUp (event) {
     switch (event.code) {
       case 'KeyW':
-        this.input.z = 0
-        break
-      case 'KeyA':
-        this.input.x = 0
-        break
       case 'KeyS':
         this.input.z = 0
         break
+      case 'KeyA':
       case 'KeyD':
         this.input.x = 0
         break

@@ -13,7 +13,7 @@ export class World extends THREE.Group {
    *  - If it is set to 1, the adjacent chunks will be visible.
    *  - If it is set to 2, the 3x3 chunks around the player will be visible.
    */
-  drawDistance = 1
+  drawDistance = 2
 
   chunkSize = {
     width: 32,
