@@ -78,11 +78,23 @@ export const blocks = {
     },
     scarcity: 0.9,
     material: new THREE.MeshLambertMaterial({ map: textures.ironOre })
+  },
+  cave: {
+    id: 6,
+    name: 'cave',
+    scale: {
+      x: 20,
+      y: 20,
+      z: 20
+    },
+    scarcity: 0.6,
+    material: new THREE.MeshLambertMaterial({ map: textures.dirt, opacity: 0 })
   }
 }
 
 export const resourcesBlocks = [
   blocks.stone,
   blocks.coalOre,
-  blocks.ironOre
+  blocks.ironOre,
+  blocks.cave
 ]

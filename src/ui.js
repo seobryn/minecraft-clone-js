@@ -10,12 +10,12 @@ export function createUI (world, player) {
   const gui = new GUI()
 
   const playerFolder = gui.addFolder('Player')
-  playerFolder.add(player, 'maxSpeed', 1, 20).name('Max Speed')
+  playerFolder.add(player, 'speed', 1, 16).name('Speed')
+  playerFolder.add(player, 'runSpeed', 17, 30).name('Run Speed')
   playerFolder.add(player, 'jumpSpeed', 1, 20).name('Jump Speed')
-  playerFolder.add(player.camHelper, 'visible').name('Show Camera Helper')
 
-  gui.add(world.size, 'width', 16, 128, 1).name('Width')
-  gui.add(world.size, 'height', 16, 128, 1).name('Height')
+  gui.add(world, 'asyncLoading').name('Load Chunk Async')
+  gui.add(world, 'drawDistance', 0, 5, 1).name('Draw Distance')
 
   const terrainFolder = gui.addFolder('Terrain')
   terrainFolder.add(world.params, 'seed', 1, 32767, 1).name('Seed')
@@ -24,6 +24,7 @@ export function createUI (world, player) {
   terrainFolder.add(world.params.terrain, 'offset', 0.1, 1, 0.01).name('Offset')
 
   const resourcesFolder = gui.addFolder('Resources')
+  resourcesFolder.close()
   resourcesBlocks.forEach((block) => {
     const resourceFolder = resourcesFolder.addFolder(block.name)
     resourceFolder.add(block, 'scarcity', 0, 1).name('Scarcity')

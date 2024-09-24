@@ -26,11 +26,11 @@ if (config.environment === 'dev') {
 
 // Camera setup
 const orbitCamera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000)
-orbitCamera.position.set(-16, 16, -16)
-orbitCamera.lookAt(0, 32, 0)
+orbitCamera.position.set(0, 32, 0)
 
 const controls = new OrbitControls(orbitCamera, renderer.domElement)
-controls.target.set(64, 0, 64)
+controls.target.set(48, 0, 48)
+controls.update()
 
 // Scene setup
 const scene = new THREE.Scene()
@@ -42,28 +42,30 @@ scene.add(world)
 const player = new Player(scene)
 
 const physics = new Physics(scene)
+const sun = new THREE.DirectionalLight()
 
 function setupLights () {
-  const sun = new THREE.DirectionalLight()
-  sun.position.set(64, 64, 128)
+  const shadowCamerabounds = 100
+  sun.position.set(50, 50, 50)
   sun.castShadow = true
-  sun.shadow.camera.left = -128
-  sun.shadow.camera.right = 128
-  sun.shadow.camera.top = 128
-  sun.shadow.camera.bottom = -128
+  sun.shadow.camera.left = -shadowCamerabounds
+  sun.shadow.camera.right = shadowCamerabounds
+  sun.shadow.camera.bottom = -shadowCamerabounds
+  sun.shadow.camera.top = shadowCamerabounds
   sun.shadow.camera.near = 0.1
-  sun.shadow.camera.far = 200
+  sun.shadow.camera.far = shadowCamerabounds
   sun.shadow.bias = -0.0001
-  sun.shadow.mapSize = new THREE.Vector2(512, 512)
+  sun.shadow.mapSize = new THREE.Vector2(2048, 2048)
 
   scene.add(sun)
+  scene.add(sun.target)
 
   if (config.environment === 'dev') {
     const shadowHelper = new THREE.CameraHelper(sun.shadow.camera)
     scene.add(shadowHelper)
   }
   const ambient = new THREE.AmbientLight()
-  ambient.intensity = 0.1
+  ambient.intensity = 0.3
   scene.add(ambient)
 }
 
@@ -76,6 +78,12 @@ function update () {
 
   window.requestAnimationFrame(update)
   physics.update(deltaTime, player, world)
+  world.update(player)
+
+  sun.position.copy(player.pos)
+  sun.position.sub(new THREE.Vector3(128, 100, 128))
+  sun.target.position.copy(player.pos)
+
   renderer.render(scene, player.controls.isLocked ? player.camera : orbitCamera)
   stats.update()
 

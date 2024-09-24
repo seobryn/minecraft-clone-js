@@ -13,8 +13,11 @@ export class Player {
   height = 1.75
 
   isOnGround = false
+
   jumpSpeed = 10
-  maxSpeed = 10
+  speed = 10
+  runSpeed = 20
+
   input = new THREE.Vector3()
   velocity = new THREE.Vector3()
   #worldVel = new THREE.Vector3()
@@ -101,18 +104,20 @@ export class Player {
       this.controls.lock()
     }
 
+    const _speed = event.shiftKey ? this.runSpeed : this.speed
+
     switch (event.code) {
       case 'KeyW':
-        this.input.z = this.maxSpeed
+        this.input.z = _speed
         break
       case 'KeyA':
-        this.input.x = -this.maxSpeed
+        this.input.x = -_speed
         break
       case 'KeyS':
-        this.input.z = -this.maxSpeed
+        this.input.z = -_speed
         break
       case 'KeyD':
-        this.input.x = this.maxSpeed
+        this.input.x = _speed
         break
       case 'KeyR':
         if (event.shiftKey) {
