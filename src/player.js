@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js'
 import { $ } from './utils/domUtils'
+import { config } from './config'
 
 const { innerHeight, innerWidth } = window
 
@@ -11,6 +12,8 @@ export class Player {
   radius = 0.5
   height = 1.75
 
+  isOnGround = false
+  jumpSpeed = 10
   maxSpeed = 10
   input = new THREE.Vector3()
   velocity = new THREE.Vector3()
@@ -27,17 +30,21 @@ export class Player {
   constructor (scene) {
     this.camera.position.set(...defaultPos)
     scene.add(this.camera)
-    scene.add(this.camHelper)
+    if (config.environment === 'dev') {
+      scene.add(this.camHelper)
+    }
 
     this.$info = $('#player-position')
     document.addEventListener('keydown', this.onKeyDown.bind(this))
     document.addEventListener('keyup', this.onKeyUp.bind(this))
 
-    this.boundsHelper = new THREE.Mesh(
-      new THREE.CylinderGeometry(this.radius, this.radius, this.height, 16),
-      new THREE.MeshBasicMaterial({ wireframe: true })
-    )
-    scene.add(this.boundsHelper)
+    if (config.environment === 'dev') {
+      this.boundsHelper = new THREE.Mesh(
+        new THREE.CylinderGeometry(this.radius, this.radius, this.height, 16),
+        new THREE.MeshBasicMaterial({ wireframe: true })
+      )
+      scene.add(this.boundsHelper)
+    }
   }
 
   get worldVel () {
@@ -67,7 +74,9 @@ export class Player {
 
       this.$info.textContent = this.toString()
     }
-    this.#updateBoundsHelper()
+    if (config.environment === 'dev') {
+      this.#updateBoundsHelper()
+    }
   }
 
   #updateBoundsHelper () {
@@ -111,6 +120,10 @@ export class Player {
           this.velocity.set(0, 0, 0)
         }
         break
+    }
+
+    if (event.code === 'Space' && this.isOnGround) {
+      this.velocity.y = this.jumpSpeed
     }
   }
 

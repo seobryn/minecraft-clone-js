@@ -3,5 +3,5 @@ export const config = {
     width: 128,
     height: 20
   },
-  environment: 'dev'
+  environment: 'prod'
 }

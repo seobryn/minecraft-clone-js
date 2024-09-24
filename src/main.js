@@ -20,7 +20,9 @@ renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 document.body.appendChild(renderer.domElement)
-document.body.appendChild(stats.dom)
+if (config.environment === 'dev') {
+  document.body.appendChild(stats.dom)
+}
 
 // Camera setup
 const orbitCamera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000)
@@ -56,8 +58,10 @@ function setupLights () {
 
   scene.add(sun)
 
-  const shadowHelper = new THREE.CameraHelper(sun.shadow.camera)
-  scene.add(shadowHelper)
+  if (config.environment === 'dev') {
+    const shadowHelper = new THREE.CameraHelper(sun.shadow.camera)
+    scene.add(shadowHelper)
+  }
   const ambient = new THREE.AmbientLight()
   ambient.intensity = 0.1
   scene.add(ambient)

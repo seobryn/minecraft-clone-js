@@ -1,6 +1,7 @@
 import { blocks } from './block'
 import * as THREE from 'three'
 import { clamp } from './utils/math.utils'
+import { config } from './config'
 
 const collisionMat = new THREE.MeshBasicMaterial({
   color: 0xff0000,
@@ -13,6 +14,10 @@ const contactMat = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: tru
 const contactGeometry = new THREE.SphereGeometry(0.05, 6, 6)
 
 export class Physics {
+  simulationRate = 200
+  timeStep = 1 / this.simulationRate
+  accumulator = 0
+
   gravity = 32
 
   /**
@@ -31,10 +36,17 @@ export class Physics {
    * @param {import("./world").World} world
    */
   update (delta, player, world) {
-    this.helpers.clear()
-    player.velocity.y -= this.gravity * delta
-    player.update(delta)
-    this.detectCollisions(player, world)
+    this.accumulator += delta
+
+    while (this.accumulator >= this.timeStep) {
+      if (config.environment === 'dev') {
+        this.helpers.clear()
+      }
+      player.velocity.y -= this.gravity * this.timeStep
+      player.update(this.timeStep)
+      this.detectCollisions(player, world)
+      this.accumulator -= this.timeStep
+    }
   }
 
   /**
@@ -43,6 +55,7 @@ export class Physics {
    * @param {import('./world').World} world - The world object
    */
   detectCollisions (player, world) {
+    player.isOnGround = false
     const candidates = this.#broadPhase(player, world)
 
     const collisions = this.#narrowPhase(candidates, player)
@@ -84,7 +97,9 @@ export class Physics {
           if (block && block.id !== blocks.empty.id) {
             const blockPos = { x, y, z }
             candidates.push(blockPos)
-            this.#addCollisionHelper(blockPos)
+            if (config.environment === 'dev') {
+              this.#addCollisionHelper(blockPos)
+            }
           }
         }
       }
@@ -126,6 +141,7 @@ export class Physics {
         if (overlapY < overlapXZ) {
           normal = new THREE.Vector3(0, -Math.sign(dy), 0)
           overlap = overlapY
+          player.isOnGround = true
         } else {
           normal = new THREE.Vector3(-dx, 0, -dz).normalize()
           overlap = overlapXZ
@@ -138,7 +154,9 @@ export class Physics {
           normal,
           overlap
         })
-        this.#addContactHelper(closestPoint)
+        if (config.environment === 'dev') {
+          this.#addContactHelper(closestPoint)
+        }
       }
     }
 
@@ -156,6 +174,9 @@ export class Physics {
 
     // 2. Resolve the collision
     for (const collision of collisions) {
+      // Avoid to re Check if the player is colliding with other blocks
+      if (!this.isInsidePlayer(collision.contactPoint, player)) continue
+
       // 2.1. Adjust the player position so the block is no longer overlapping
       const deltaPos = collision.normal.clone()
       deltaPos.multiplyScalar(collision.overlap)
