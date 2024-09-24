@@ -1,8 +1,17 @@
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js'
 import { resourcesBlocks } from './block'
 
-export function createUI (world) {
+/**
+ *
+ * @param {import('./world').World} world
+ * @param {import('./player').Player} player
+ */
+export function createUI (world, player) {
   const gui = new GUI()
+
+  const playerFolder = gui.addFolder('Player')
+  playerFolder.add(player, 'maxSpeed', 1, 20).name('Max Speed')
+  playerFolder.add(player.camHelper, 'visible').name('Show Camera Helper')
 
   gui.add(world.size, 'width', 16, 128, 1).name('Width')
   gui.add(world.size, 'height', 16, 128, 1).name('Height')

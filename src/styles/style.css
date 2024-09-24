@@ -18,3 +18,11 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+.info {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+
+  margin: 8px;
+}
